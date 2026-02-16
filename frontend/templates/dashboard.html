@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Syrias Dash</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-brand" onclick="location.reload()" title="Torna alla Dashboard">
+                <div class="brand-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 3v18h18"/>
+                        <path d="M18 17V9"/>
+                        <path d="M13 17V5"/>
+                        <path d="M8 17v-3"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-name">SYRIAS</span>
+                    <span class="brand-tagline">Dashboard</span>
+                </div>
+            </div>
+            <div id="user-header" class="user-header" style="display:none;">
+                <div class="user-info" onclick="showProfile()">
+                    <div class="user-avatar">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="8" r="4"/>
+                            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+                        </svg>
+                    </div>
+                    <span id="user-name-header" class="user-name"></span>
+                </div>
+                <button onclick="logout()" class="btn-logout" title="Esci">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- Modal Conferma Eliminazione -->
+    <div id="delete-confirm-modal" class="confirm-modal" style="display: none;">
+        <div class="confirm-modal-overlay"></div>
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <h3>Conferma Eliminazione</h3>
+            </div>
+            <div class="confirm-modal-body">
+                <p>Sei sicuro di voler eliminare questo modello?</p>
+                <p style="color: #666; font-size: 0.9rem; margin-top: 8px;">L'operazione non può essere annullata.</p>
+            </div>
+            <div class="confirm-modal-footer">
+                <button id="delete-confirm-cancel" class="btn-confirm-cancel">Annulla</button>
+                <button id="delete-confirm-ok" class="btn-confirm-ok">Elimina</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        
+        <!-- Login/Registrazione -->
+        <section id="auth-section">
+            <div class="auth-card">
+                <div class="auth-inner">
+                <!-- Logo e Brand -->
+                <div class="auth-header">
+                    <div class="auth-logo">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" style="display:block;">
+                            <path d="M3 3v18h18" fill="none" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <rect x="16" y="9" width="4" height="8" fill="white" rx="1"/>
+                            <rect x="11" y="5" width="4" height="12" fill="white" rx="1"/>
+                            <rect x="6" y="14" width="4" height="3" fill="white" rx="1"/>
+                        </svg>
+                    </div>
+                    <h1 class="auth-brand">SYRIAS</h1>
+                    <p class="auth-tagline">Time Series Analysis Platform</p>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="login-form" autocomplete="on" onsubmit="event.preventDefault(); login();">
+                    <div class="auth-form-header">
+                        <h2>Bentornato</h2>
+                    </div>
+                    
+                    <div class="form-group field-wrapper">
+                        <input type="email" id="login-email" name="email" autocomplete="email" required>
+                        <label for="login-email">Email</label>
+                        <i class="field-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                <path d="M22 6l-10 7L2 6"/>
+                            </svg>
+                        </i>
+                    </div>
+                    
+                    <div class="form-group field-wrapper">
+                        <input type="password" id="login-password" name="password" autocomplete="current-password" required>
+                        <label for="login-password">Password</label>
+                        <i class="field-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                        </i>
+                    </div>
+                    
+                    <button type="submit" class="btn-auth-primary btn-auth-register">
+                        <span>Accedi</span>
+                    </button>
+                    
+                    <div id="auth-status" class="status-message" style="display:none;"></div>
+                    
+                    <div class="auth-divider">
+                        <span>oppure</span>
+                    </div>
+                    
+                    <button type="button" onclick="showRegisterForm()" class="btn-auth-secondary btn-auth-register">
+                        Crea un nuovo account
+                    </button>
+                </form>
+                
+                <!-- Register Form -->
+                <form id="register-form" style="display:none;" autocomplete="on" onsubmit="event.preventDefault(); register();">
+                    <div class="auth-form-header">
+                        <h2>Crea Account</h2>
+                        <p>Inizia la tua analisi di serie temporali</p>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group field-wrapper">
+                            <input type="text" id="register-name" name="name" autocomplete="given-name" required>
+                            <label for="register-name">Nome</label>
+                            <i class="field-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="8" r="4"/>
+                                    <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+                                </svg>
+                            </i>
+                        </div>
+                        <div class="form-group field-wrapper">
+                            <input type="text" id="register-surname" name="surname" autocomplete="family-name" required>
+                            <label for="register-surname">Cognome</label>
+                            <i class="field-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="8" r="4"/>
+                                    <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+                                </svg>
+                            </i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group field-wrapper">
+                        <input type="email" id="register-email" name="email" autocomplete="email" required>
+                        <label for="register-email">Email</label>
+                        <i class="field-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                <path d="M22 6l-10 7L2 6"/>
+                            </svg>
+                        </i>
+                    </div>
+                    
+                    <div class="form-group field-wrapper">
+                        <input type="password" id="register-password" name="password" autocomplete="new-password" required minlength="6">
+                        <label for="register-password">Password</label>
+                        <i class="field-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            </svg>
+                        </i>
+                    </div>
+                    
+                    <button type="submit" class="btn-auth-primary btn-auth-register">
+                        <span>Registrati</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M19 8v6M22 11h-6"/>
+                        </svg>
+                    </button>
+                    
+                    <div id="register-status" class="status-message" style="display:none;"></div>
+                    
+                    <div class="auth-divider">
+                        <span>oppure</span>
+                    </div>
+                    
+                    <button type="button" onclick="showLoginForm()" class="btn-auth-secondary">
+                        Hai già un account? Accedi
+                    </button>
+                </form>
+                
+                <!-- Footer -->
+                <div class="auth-footer">
+                    <p>SARIMAX · ARIMA · Forecasting</p>
+                </div>
+                </div><!-- /.auth-inner -->
+            </div>
+            
+            <div id="user-info" style="display:none;"></div>
+        </section>
+        
+        <!-- Upload File -->
+        <section class="card upload-card-compact" id="upload-section" style="display:none;">
+            <div class="upload-compact-header">
+                <h2>Carica Dataset</h2>
+                <div class="upload-format-info">
+                    <span class="format-tag">CSV</span>
+                    <span class="format-cols">Colonne: <code>data</code>, <code>y</code></span>
+                </div>
+            </div>
+            
+            <div class="upload-compact-body">
+                <div class="upload-dropzone-compact" id="upload-dropzone">
+                    <input type="file" id="file-input" accept=".csv">
+                    <div class="dropzone-content-compact">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <p>Trascina qui o <span class="dropzone-link">sfoglia</span></p>
+                    </div>
+                </div>
+                
+                <button onclick="uploadFile()" class="btn-upload-compact">Carica</button>
+            </div>
+            
+            <div class="upload-example-inline">
+                <span class="example-label">Esempio:</span>
+                <code class="example-code">data,y | 2024-01-01,100.5 | 2024-01-02,102.3</code>
+            </div>
+            
+            <div id="upload-status" class="status-message" style="display:none;"></div>
+        </section>
+        
+        <!-- Visualizzazione Dati -->
+        <section class="card" id="data-visualization-section" style="display:none;">
+            <h2>Visualizzazione Serie Storica</h2>
+            
+            <!-- Grafico -->
+            <div id="plot-container">
+                <div id="time-series-plot"></div>
+            </div>
+            
+            <!-- Info Date -->
+            <div id="date-info" class="status-info" style="margin-top: 10px; margin-bottom: 20px;">
+                <p id="date-range-info"></p>
+            </div>
+            
+            <!-- Statistiche Descrittive -->
+            <div id="descriptive-stats">
+                <h3>Statistiche Descrittive</h3>
+                <div id="stats-table"></div>
+            </div>
+            
+            <!-- ACF/PACF -->
+            <div id="acf-pacf-section" class="mt-4">
+                <h3>Autocorrelazione (ACF) e Autocorrelazione Parziale (PACF)</h3>
+                
+                <!-- Analisi automatica ACF/PACF - serie originale -->
+                <div class="ai-analysis-box">
+                    <h4>Analisi automatica ACF/PACF (serie originale)</h4>
+                    <p class="text-muted">
+                        Analisi euristica locale dei valori ACF/PACF per suggerire velocemente un modello ARIMA/SARIMA.
+                    </p>
+                    <button onclick="analyzeACFPACFWithAI()" id="analyze-ai-btn" class="btn-primary">
+                        ANALISI AUTOMATICA ACF/PACF
+                    </button>
+                    <div id="ai-analysis-status" class="status-message" style="display:none; margin-top: 15px;"></div>
+                    <div id="ai-analysis-result" style="margin-top: 15px; display: none;">
+                        <h5 style="color: var(--primary); margin-bottom: 10px;">Risultato analisi</h5>
+                        <div id="ai-description" style="background: white; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; white-space: pre-wrap; line-height: 1.6; border: 1px solid var(--border);"></div>
+                        <div class="ai-recommendation-box">
+                            <h5 style="margin-top: 0;">Raccomandazione modello</h5>
+                            <div id="ai-recommendation-content"></div>
+                            <button onclick="applyAIRecommendation()" id="apply-ai-recommendation-btn" class="btn-success" style="margin-top: 10px;">
+                                Applica Raccomandazione
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;" class="acf-pacf-grid">
+                    <div>
+                        <h4>ACF (Autocorrelation Function)</h4>
+                        <div id="acf-plot"></div>
+                    </div>
+                    <div>
+                        <h4>PACF (Partial Autocorrelation Function)</h4>
+                        <div id="pacf-plot"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Smoothing Serie -->
+        <section class="card" id="smoothing-section" style="display:none;">
+            <h2>Smoothing Serie Storica (Opzionale)</h2>
+            <p><strong>Applica media mobile per smussare la serie:</strong> Questo può migliorare le previsioni ARIMA riducendo il rumore.</p>
+            <div style="margin: 15px 0;">
+                <label>Finestra Media Mobile: 
+                    <select id="smoothing-window">
+                        <option value="1">Nessuno (serie originale)</option>
+                        <option value="3">3 termini</option>
+                        <option value="5">5 termini</option>
+                        <option value="7">7 termini</option>
+                        <option value="10">10 termini</option>
+                    </select>
+                </label>
+            </div>
+            <div class="note-suggestion">
+                <small>💡 <strong>Suggerimento:</strong> Una finestra più grande smussa di più ma può perdere dettagli. Prova 3-5 termini per iniziare.</small>
+            </div>
+            <button onclick="applySmoothing()" id="apply-smoothing-btn">Applica Smoothing</button>
+            <div id="smoothing-status" class="status-message" style="display:none;"></div>
+            
+            <!-- Grafico Confronto Originale vs Smussato -->
+            <div id="smoothing-comparison" style="display:none; margin-top: 30px;">
+                <h3>Confronto Serie Originale vs Smussata</h3>
+                <div id="plot-container">
+                    <div id="smoothing-comparison-chart"></div>
+                </div>
+            </div>
+            
+            <!-- Statistiche Serie Smussata -->
+            <div id="smoothing-stats" style="display:none; margin-top: 30px;">
+                <h3>Statistiche Descrittive Serie Smussata</h3>
+                <div id="smoothing-stats-table"></div>
+            </div>
+            
+            <!-- ACF/PACF Serie Smussata -->
+            <div id="smoothing-acf-pacf" style="display:none; margin-top: 30px;">
+                <h3>ACF/PACF Serie Smussata</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;" class="acf-pacf-grid">
+                    <div>
+                        <h4>ACF (Serie Smussata)</h4>
+                        <div id="smoothing-acf-plot"></div>
+                    </div>
+                    <div>
+                        <h4>PACF (Serie Smussata)</h4>
+                        <div id="smoothing-pacf-plot"></div>
+                    </div>
+                </div>
+                
+                <!-- Analisi automatica ACF/PACF - serie smussata -->
+                <div class="ai-analysis-box">
+                    <h4>Analisi automatica ACF/PACF (serie smussata)</h4>
+                    <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                        Analisi euristica locale dei valori ACF/PACF della serie smussata per suggerire modelli ARIMA/SARIMA più stabili.
+                    </p>
+                    <button onclick="analyzeACFPACFWithAI('smoothed')" id="analyze-ai-smoothed-btn" class="btn-primary">
+                        ANALISI AUTOMATICA ACF/PACF
+                    </button>
+                    <div id="ai-analysis-smoothed-status" class="status-message" style="display:none; margin-top: 10px;"></div>
+                    <div id="ai-analysis-smoothed-result" style="margin-top: 15px; display: none;">
+                        <h5 style="color: var(--primary); margin-bottom: 10px;">Risultato analisi (serie smussata)</h5>
+                        <div id="ai-smoothed-description" style="background: white; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; white-space: pre-wrap; line-height: 1.6; border: 1px solid var(--border);"></div>
+                        <div id="ai-smoothed-recommendation" class="ai-recommendation-box">
+                            <h5 style="margin-top: 0;">Raccomandazione modello</h5>
+                            <div id="ai-smoothed-recommendation-content"></div>
+                            <button onclick="applyAIRecommendation('smoothed')" id="apply-ai-smoothed-recommendation-btn" style="margin-top: 10px; padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                Applica Raccomandazione
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Trasformazione Logaritmica -->
+        <section class="card" id="log-transform-section" style="display:none;">
+            <h2>Trasformazione Logaritmica (Opzionale)</h2>
+            <p><strong>Applica trasformazione logaritmica alla serie:</strong> Utile per stabilizzare la varianza e rendere la serie più stazionaria.</p>
+            <div style="margin: 15px 0;">
+                <label>
+                    <input type="checkbox" id="apply-log-checkbox">
+                    Applica trasformazione logaritmica
+                </label>
+            </div>
+            <div class="note-warning">
+                <small><strong>Nota:</strong> La trasformazione logaritmica richiede tutti i valori positivi (> 0).</small>
+            </div>
+            <button onclick="applyLogTransform()" id="apply-log-btn">Applica Trasformazione Log</button>
+            <div id="log-transform-status" class="status-message" style="display:none;"></div>
+            
+            <!-- Statistiche e ACF/PACF Serie Trasformata Log -->
+            <div id="log-transform-results" style="display:none; margin-top: 30px;">
+                <h3>Serie Trasformata Log</h3>
+                <div id="plot-container">
+                    <div id="log-transform-chart" style="margin-top: 20px; margin-bottom: 30px;"></div>
+                </div>
+                
+                <h3>Statistiche Descrittive Serie Trasformata Log</h3>
+                <div id="log-transform-stats"></div>
+                
+                <!-- ACF/PACF Serie Trasformata Log -->
+                <div id="log-transform-acf-pacf" style="display:none; margin-top: 30px;">
+                    <h3>ACF/PACF Serie Trasformata Log</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;" class="acf-pacf-grid">
+                        <div>
+                            <h4>ACF (Serie Trasformata Log)</h4>
+                            <div id="log-transform-acf-plot"></div>
+                        </div>
+                        <div>
+                            <h4>PACF (Serie Trasformata Log)</h4>
+                            <div id="log-transform-pacf-plot"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Analisi automatica ACF/PACF - serie trasformata log -->
+                    <div class="ai-analysis-box">
+                        <h4>Analisi automatica ACF/PACF (serie trasformata log)</h4>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                            Analisi dei valori ACF/PACF dopo trasformazione logaritmica per individuare modelli ARIMA/SARIMA adatti.
+                        </p>
+                        <button onclick="analyzeACFPACFWithAI('log')" id="analyze-ai-log-btn" class="btn-primary">
+                            ANALISI AUTOMATICA ACF/PACF
+                        </button>
+                        <div id="ai-analysis-log-status" class="status-message" style="display:none; margin-top: 10px;"></div>
+                        <div id="ai-analysis-log-result" style="margin-top: 15px; display: none;">
+                            <h5 style="color: var(--primary); margin-bottom: 10px;">Risultato analisi (serie log)</h5>
+                            <div id="ai-log-description" style="background: white; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; white-space: pre-wrap; line-height: 1.6; border: 1px solid var(--border);"></div>
+                            <div id="ai-log-recommendation" class="ai-recommendation-box">
+                                <h5 style="margin-top: 0;">Raccomandazione modello</h5>
+                                <div id="ai-log-recommendation-content"></div>
+                                <button onclick="applyAIRecommendation('log')" id="apply-ai-log-recommendation-btn" style="margin-top: 10px; padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    Applica Raccomandazione
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Differenziazione -->
+        <section class="card" id="differencing-section" style="display:none;">
+            <h2>Differenziazione (Opzionale)</h2>
+            <p><strong>Applica differenziazione alla serie:</strong> Utile per rendere la serie stazionaria rimuovendo trend e stagionalità.</p>
+            <div style="margin: 15px 0;">
+                <label>Ordine di Differenziazione: 
+                    <select id="differencing-order">
+                        <option value="0">Nessuna (0)</option>
+                        <option value="1">Primo ordine (1)</option>
+                        <option value="2">Secondo ordine (2)</option>
+                    </select>
+                </label>
+            </div>
+            <div class="note-suggestion">
+                <small>💡 <strong>Suggerimento:</strong> La differenziazione rimuove osservazioni iniziali. Ordine 1 è solitamente sufficiente.</small>
+            </div>
+            <button onclick="applyDifferencing()" id="apply-differencing-btn">Applica Differenziazione</button>
+            <div id="differencing-status" class="status-message" style="display:none;"></div>
+            
+            <!-- Statistiche e ACF/PACF Serie Differenziata -->
+            <div id="differencing-results" style="display:none; margin-top: 30px;">
+                <h3>Serie Differenziata</h3>
+                <div id="plot-container">
+                    <div id="differencing-chart" style="margin-top: 20px; margin-bottom: 30px;"></div>
+                </div>
+                
+                <h3>Statistiche Descrittive Serie Differenziata</h3>
+                <div id="differencing-stats"></div>
+                
+                    <!-- ACF/PACF Serie Differenziata -->
+                    <div id="differencing-acf-pacf" style="display:none; margin-top: 30px;">
+                        <h3>ACF/PACF Serie Differenziata</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;" class="acf-pacf-grid">
+                            <div>
+                                <h4>ACF (Serie Differenziata)</h4>
+                                <div id="differencing-acf-plot"></div>
+                            </div>
+                            <div>
+                                <h4>PACF (Serie Differenziata)</h4>
+                                <div id="differencing-pacf-plot"></div>
+                            </div>
+                        </div>
+                    
+                    <!-- Analisi automatica ACF/PACF - serie differenziata -->
+                    <div class="ai-analysis-box">
+                        <h4>Analisi automatica ACF/PACF (serie differenziata)</h4>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 10px;">
+                            Analisi dei valori ACF/PACF della serie differenziata per individuare modelli ARIMA/SARIMA per la parte stazionaria.
+                        </p>
+                        <button onclick="analyzeACFPACFWithAI('diff')" id="analyze-ai-diff-btn" class="btn-primary">
+                            ANALISI AUTOMATICA ACF/PACF
+                        </button>
+                        <div id="ai-analysis-diff-status" class="status-message" style="display:none; margin-top: 10px;"></div>
+                        <div id="ai-analysis-diff-result" style="margin-top: 15px; display: none;">
+                            <h5 style="color: var(--primary); margin-bottom: 10px;">Risultato analisi (serie differenziata)</h5>
+                            <div id="ai-diff-description" style="background: white; padding: 15px; border-radius: var(--radius); margin-bottom: 15px; white-space: pre-wrap; line-height: 1.6; border: 1px solid var(--border);"></div>
+                            <div id="ai-diff-recommendation" class="ai-recommendation-box">
+                                <h5 style="margin-top: 0;">Raccomandazione modello</h5>
+                                <div id="ai-diff-recommendation-content"></div>
+                                <button onclick="applyAIRecommendation('diff')" id="apply-ai-diff-recommendation-btn" style="margin-top: 10px; padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                    Applica Raccomandazione
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Configurazione Split -->
+        <section class="card" id="split-section" style="display:none;">
+            <h2>Configura Split Training/Test</h2>
+            <div style="margin: 10px 0;">
+                <div style="margin-bottom: 10px;">
+                    <strong>Osservazioni totali disponibili:</strong> <span id="total-obs-display">-</span>
+                </div>
+                <label>Numero di osservazioni per Training Set: 
+                    <input type="number" id="train-obs" min="1" step="1" value="" placeholder="Inserisci numero">
+                    <span id="train-obs-display"></span>
+                </label>
+                <div style="margin-top: 5px; font-size: 12px; color: #666;">
+                    <small>Inserisci il numero di osservazioni da usare per il training set. Le rimanenti verranno usate per il test set.</small>
+                </div>
+            </div>
+            <button onclick="applySplit()" id="apply-split-btn">Applica Split</button>
+            <div id="split-status" class="status-message" style="display:none;"></div>
+        </section>
+        
+        <!-- Configura e Esegui SARIMAX -->
+        <section class="card" id="sarimax-section" style="display:none;">
+            <h2>Configura e Esegui Modello SARIMAX</h2>
+            <p><strong>Configura manualmente i parametri del modello SARIMAX:</strong></p>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                <!-- Parametri ARIMA -->
+                <div>
+                    <h3>Parametri ARIMA (p, d, q)</h3>
+                    <div style="margin: 10px 0;">
+                        <label>p (AR order): 
+                            <input type="number" id="sarimax-p" min="0" max="10" value="1" style="width: 80px;">
+                        </label>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label>d (Differencing): 
+                            <input type="number" id="sarimax-d" min="0" max="3" value="1" style="width: 80px;">
+                        </label>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label>q (MA order): 
+                            <input type="number" id="sarimax-q" min="0" max="10" value="1" style="width: 80px;">
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Parametri Stagionali -->
+                <div>
+                    <h3>Parametri Stagionali (P, D, Q, m)</h3>
+                    <div style="margin: 10px 0;">
+                        <label>P (Seasonal AR): 
+                            <input type="number" id="sarimax-P" min="0" max="5" value="0" style="width: 80px;">
+                        </label>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label>D (Seasonal Differencing): 
+                            <input type="number" id="sarimax-D" min="0" max="2" value="0" style="width: 80px;">
+                        </label>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label>Q (Seasonal MA): 
+                            <input type="number" id="sarimax-Q" min="0" max="5" value="0" style="width: 80px;">
+                        </label>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <label>m (Periodo stagionale): 
+                            <input type="number" id="sarimax-m" min="0" max="24" value="0" style="width: 80px;">
+                            <small style="display: block; color: #666;">12=mensile, 4=trimestrale, 0=nessuna stagionalità</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Trend -->
+            <div style="margin: 20px 0;">
+                <h3>Trend</h3>
+                <select id="sarimax-trend" style="padding: 5px; font-size: 14px;">
+                    <option value="n">Nessuno (n)</option>
+                    <option value="c">Costante (c)</option>
+                    <option value="t">Lineare (t)</option>
+                    <option value="ct">Costante + Lineare (ct)</option>
+                </select>
+                <small style="display: block; color: #666; margin-top: 5px;">
+                    'n'=nessuno, 'c'=costante, 't'=lineare, 'ct'=costante+lineare
+                </small>
+            </div>
+            
+            <!-- Opzioni Avanzate -->
+            <div style="margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 4px;">
+                <h3>Opzioni Avanzate</h3>
+                <div style="margin: 10px 0;">
+                    <label>
+                        <input type="checkbox" id="sarimax-enforce-stationarity" checked>
+                        Enforce Stationarity
+                    </label>
+                </div>
+                <div style="margin: 10px 0;">
+                    <label>
+                        <input type="checkbox" id="sarimax-enforce-invertibility" checked>
+                        Enforce Invertibility
+                    </label>
+                </div>
+                <div style="margin: 10px 0;">
+                    <label>Covariance Type: 
+                        <select id="sarimax-cov-type" style="padding: 5px; font-size: 14px;">
+                            <option value="robust_approx" selected>robust_approx</option>
+                            <option value="opg">opg</option>
+                            <option value="oim">oim</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+            
+            <button onclick="runSARIMAX()" id="run-sarimax-btn" disabled>Esegui SARIMAX</button>
+            <div id="sarimax-status" class="status-message" style="display:none;"></div>
+        </section>
+        
+        <!-- Risultati Modello -->
+        <section class="card" id="results-section" style="display:none;">
+            <h2>Risultati Modello ARIMA</h2>
+            
+            <!-- Info Modello Base -->
+            <div id="model-info"></div>
+            
+            <!-- Output Modello: Coefficienti, Stderr, P-values -->
+            <div id="model-output-section" style="margin-top: 20px;">
+                <h3>Output Modello</h3>
+                <div id="coefficients-table"></div>
+            </div>
+            
+            <!-- Summary Completo -->
+            <div id="model-summary-section" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                    <h3 style="margin: 0;">Summary Completo Modello</h3>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <button id="export-summary-btn" onclick="exportModelSummary()" class="btn-primary" style="display: none; padding: 8px 16px; font-size: 0.875rem;">
+                            📥 Esporta Summary
+                        </button>
+                        <div id="export-summary-status" class="status-message" style="display: none; font-size: 0.875rem;"></div>
+                    </div>
+                </div>
+                <pre id="model-summary-text"></pre>
+            </div>
+            
+            <!-- Metriche Performance -->
+            <div id="metrics-display" style="margin-top: 20px;"></div>
+        </section>
+        
+        <!-- Grafici Confronto -->
+        <section class="card" id="charts-section" style="display:none;">
+            <h2>Grafici Confronto Previsioni</h2>
+            
+            <!-- Grafico Training: Fitted vs Observed -->
+            <div style="margin: 30px 0;">
+                <h3>Training Set: Fitted vs Observed</h3>
+                <div id="train-chart"></div>
+            </div>
+            
+            <!-- Grafico Test: Forecast vs Observed -->
+            <div style="margin: 30px 0;">
+                <h3>Test Set: Forecast vs Observed</h3>
+                <div id="test-chart"></div>
+            </div>
+            
+            <!-- Paper Section -->
+            <div class="paper-section">
+                <h3>Report del Modello</h3>
+                <p>Genera un report completo del modello con tutte le informazioni, metriche e grafici. Il report può essere salvato in PDF utilizzando la funzione "Stampa" del browser.</p>
+                <div class="paper-actions">
+                    <button id="generate-paper-btn" onclick="generatePaper()" class="btn-primary">
+                        Genera Report
+                    </button>
+                    <button id="open-paper-btn" onclick="openPaper()" class="btn-success" style="display: none;">
+                        Apri Report
+                    </button>
+                </div>
+                <div id="paper-status" class="status-message" style="display: none; margin-top: 10px;"></div>
+            </div>
+        </section>
+        
+        <!-- Storico Modelli -->
+        <section class="card" id="model-runs-section" style="display:none;">
+            <div class="section-header">
+                <h2>Storico Modelli</h2>
+                <p class="section-subtitle">Visualizza e gestisci i modelli addestrati</p>
+            </div>
+            <div id="model-runs-status" class="status-message" style="display:none; margin-top: 10px;"></div>
+            <div id="model-runs-list" style="margin-top: 20px;"></div>
+        </section>
+        
+        <!-- Area Personale / Profilo -->
+        <section class="card" id="profile-section" style="display:none;">
+            <div class="section-header">
+                <h2>Area Personale</h2>
+                <p class="section-subtitle">Gestisci i tuoi dati personali e la password</p>
+            </div>
+            
+            <div id="profile-form">
+                <h3>Informazioni Personali</h3>
+                
+                <div class="form-group" style="margin: 15px 0;">
+                    <label>Nome</label>
+                    <input type="text" id="profile-name">
+                </div>
+                
+                <div class="form-group" style="margin: 15px 0;">
+                    <label>Cognome</label>
+                    <input type="text" id="profile-surname">
+                </div>
+                
+                <div class="form-group" style="margin: 15px 0;">
+                    <label>Email</label>
+                    <input type="email" id="profile-email">
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button onclick="updateProfile()" class="btn-primary">Salva Modifiche</button>
+                    <button onclick="hideProfile()" class="btn-outline">Annulla</button>
+                </div>
+                <div id="profile-status" class="status-message" style="display:none; margin-top: 15px;"></div>
+            </div>
+            
+            <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid var(--border);">
+                <h3>Cambia Password</h3>
+                
+                <div style="margin: 15px 0;">
+                    <label>Password Attuale: <input type="password" id="current-password"></label>
+                </div>
+                
+                <div style="margin: 15px 0;">
+                    <label>Nuova Password: <input type="password" id="new-password"></label>
+                    <small class="text-muted">(minimo 6 caratteri)</small>
+                </div>
+                
+                <div style="margin: 15px 0;">
+                    <label>Conferma Nuova Password: <input type="password" id="confirm-password"></label>
+                </div>
+                
+                <button onclick="changePassword()" class="btn-warning">🔒 Cambia Password</button>
+                <div id="password-status" class="status-message" style="display:none; margin-top: 15px;"></div>
+            </div>
+        </section>
+        
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Verifica lo stato di login al caricamento della pagina
+        document.addEventListener('DOMContentLoaded', function() {
+            // Reset scroll position all'inizio
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            
+            checkLoginStatus();
+        });
+        
+        // Verifica anche quando la pagina è completamente caricata
+        window.addEventListener('load', function() {
+            // Reset scroll position dopo il caricamento
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            
+            // Forza il reset delle dimensioni su smartphone
+            if (window.innerWidth <= 480) {
+                document.body.style.width = '100%';
+                document.body.style.maxWidth = '100vw';
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.style.width = '100%';
+                    container.style.maxWidth = '100%';
+                }
+                
+                // Assicura che la pagina parta dall'alto
+                setTimeout(() => {
+                    window.scrollTo(0, 0);
+                    document.documentElement.scrollTop = 0;
+                    document.body.scrollTop = 0;
+                }, 100);
+            }
+        });
+    </script>
+</body>
+</html>
+

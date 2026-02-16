@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report ARIMA/SARIMA - SYRIAS</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a365d;
+            --accent: #2b6cb0;
+            --text: #1a202c;
+            --text-light: #4a5568;
+            --bg: #ffffff;
+            --bg-alt: #f7fafc;
+            --border: #e2e8f0;
+            --success: #38a169;
+            --danger: #e53e3e;
+            --radius: 6px;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            line-height: 1.5;
+            color: var(--text);
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--bg);
+            font-size: 12px;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .header-brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .header-brand svg { width: 24px; height: 24px; fill: var(--primary); }
+        .header-brand span { font-size: 14px; font-weight: 700; color: var(--primary); letter-spacing: 2px; }
+        .header h1 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+        .header .date-info { color: var(--text-light); font-size: 11px; }
+        
+        /* Sections */
+        .section { margin-bottom: 18px; page-break-inside: avoid; }
+        .section h2 {
+            color: var(--primary);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        .section h3 { font-size: 12px; font-weight: 600; margin: 12px 0 8px; }
+        
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+        }
+        
+        .info-item {
+            background: var(--bg-alt);
+            padding: 8px 10px;
+            border-radius: var(--radius);
+            border-left: 3px solid var(--accent);
+        }
+        
+        .info-item strong {
+            display: block;
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        
+        .info-item span { font-size: 11px; font-weight: 500; }
+        
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; font-size: 10px; margin: 10px 0; }
+        table th, table td { padding: 6px 8px; text-align: left; border: 1px solid var(--border); }
+        table th { background: var(--primary); color: white; font-weight: 600; font-size: 9px; text-transform: uppercase; }
+        table tr:nth-child(even) td { background: var(--bg-alt); }
+        
+        /* Metrics */
+        .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .metric-card {
+            background: var(--accent);
+            color: white;
+            padding: 12px;
+            border-radius: var(--radius);
+            text-align: center;
+        }
+        .metric-card .label { font-size: 9px; font-weight: 600; text-transform: uppercase; opacity: 0.9; margin-bottom: 4px; }
+        .metric-card .value { font-size: 16px; font-weight: 700; }
+        
+        /* Summary Box */
+        .summary-box {
+            background: var(--bg-alt);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--accent);
+            padding: 10px;
+            border-radius: var(--radius);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        /* Charts - Generous dimensions */
+        .chart-container {
+            margin: 16px 0 24px 0;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+            background: white;
+        }
+        
+        .chart-box {
+            width: 100%;
+            height: 320px;
+            background: white;
+            margin-bottom: 8px;
+        }
+        
+        .chart-box.small { 
+            height: 240px; 
+            margin-bottom: 8px;
+        }
+        
+        .chart-group { 
+            page-break-inside: avoid; 
+            margin-bottom: 32px;
+        }
+        
+        /* Stats after chart */
+        .chart-group .info-grid {
+            margin-top: 28px;
+            margin-bottom: 12px;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 30px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-light);
+            font-size: 10px;
+        }
+        
+        /* Print Button */
+        .no-print {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 1000;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-action {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        
+        .btn-action:hover { background: var(--accent); }
+        .btn-action svg { width: 14px; height: 14px; fill: currentColor; }
+        .btn-secondary { background: white; color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { background: var(--bg-alt); }
+        
+        /* AI Card */
+        .ai-card {
+            background: var(--bg-alt);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+                margin-bottom: 10px;
+            }
+        .ai-card h4 { color: var(--primary); font-size: 11px; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+        
+        /* Print Styles */
+        @media print {
+            @page { size: A4; margin: 12mm 10mm; }
+            
+            body { padding: 0; max-width: 100%; font-size: 10pt; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .header { margin-bottom: 14px; padding-bottom: 12px; }
+            .header h1 { font-size: 14pt; }
+            .section { margin-bottom: 14px; }
+            .section h2 { font-size: 11pt; margin-bottom: 8px; }
+            .section h3 { font-size: 10pt; margin: 10px 0 6px; }
+            
+            .info-item { padding: 6px 8px; background: #f7fafc !important; }
+            .info-item strong { font-size: 7pt; }
+            .info-item span { font-size: 9pt; }
+            
+            .metric-card { padding: 8px; background: #2b6cb0 !important; }
+            .metric-card .label { font-size: 7pt; }
+            .metric-card .value { font-size: 11pt; }
+            
+            table { font-size: 8pt; }
+            table th { background: #1a365d !important; padding: 5px 6px; font-size: 7pt; }
+            table td { padding: 4px 6px; }
+            
+            .summary-box { font-size: 7pt; padding: 8px; max-height: none; overflow: visible; }
+            
+            .chart-container { padding: 12px; margin: 16px 0 24px 0 !important; }
+            .chart-box { height: 280px !important; margin-bottom: 12px !important; }
+            .chart-box.small { height: 220px !important; margin-bottom: 12px !important; }
+            .chart-group { margin-bottom: 28px !important; page-break-inside: avoid; }
+            .chart-group .info-grid { margin-top: 24px !important; margin-bottom: 16px !important; }
+            
+            .chart-group { page-break-inside: avoid; }
+            .page-break { page-break-before: always; }
+            
+            .footer { margin-top: 20px; padding-top: 10px; font-size: 8pt; }
+        }
+        
+        /* Responsive */
+        @media screen and (max-width: 768px) {
+            body { padding: 15px; }
+            .info-grid { grid-template-columns: repeat(2, 1fr); }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .no-print { flex-direction: column; top: 8px; right: 8px; }
+            .btn-action { padding: 6px 12px; font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <a href="/" class="btn-action btn-secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Dashboard
+        </a>
+        <button class="btn-action" onclick="window.print()">
+            <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+            Stampa PDF
+        </button>
+    </div>
+    
+    <div class="header">
+        <div class="header-brand">
+            <svg viewBox="0 0 24 24"><path d="M3 13h2v8H3v-8zm4-5h2v13H7V8zm4-5h2v18h-2V3zm4 8h2v10h-2V11zm4-3h2v13h-2V8z"/></svg>
+            <span>SYRIAS</span>
+        </div>
+        <h1>Report Analisi ARIMA/SARIMA</h1>
+        <div class="date-info" id="paper-date"></div>
+    </div>
+    
+    <div class="section">
+        <h2>1. Informazioni Generali</h2>
+        <div class="info-grid" id="general-info"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. Configurazione del Modello</h2>
+        <div class="info-grid" id="model-config"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Parametri SARIMAX</h2>
+        <div id="sarimax-params"></div>
+    </div>
+    
+    <div class="section">
+        <h2>4. Metriche di Performance</h2>
+        <div class="metrics-grid" id="metrics-display"></div>
+    </div>
+    
+    <div class="section">
+        <h2>5. Output del Modello</h2>
+        <h3>Coefficienti Stimati</h3>
+        <div id="coefficients-table"></div>
+        <h3>Summary Statistico</h3>
+        <div class="summary-box" id="model-summary"></div>
+    </div>
+    
+    <div class="section page-break">
+        <h2>6. Serie Storica</h2>
+        <div class="chart-group">
+            <h3>Serie Originale</h3>
+            <div class="chart-container">
+                <div id="original-series-chart" class="chart-box"></div>
+                </div>
+            <div class="info-grid" id="original-series-stats"></div>
+        </div>
+        <div class="chart-group">
+            <h3>ACF/PACF Serie Originale</h3>
+            <div class="chart-container">
+                <div id="original-acf-chart" class="chart-box small"></div>
+                </div>
+            <div class="chart-container">
+                <div id="original-pacf-chart" class="chart-box small"></div>
+            </div>
+        </div>
+        <div class="chart-group" id="transformed-series-section" style="display:none;">
+            <h3>Serie Trasformata</h3>
+            <div class="chart-container">
+                <div id="transformed-series-chart" class="chart-box"></div>
+                </div>
+            <div class="info-grid" id="transformed-series-stats"></div>
+            <div class="chart-container">
+                <div id="transformed-acf-chart" class="chart-box small"></div>
+            </div>
+            <div class="chart-container">
+                <div id="transformed-pacf-chart" class="chart-box small"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section page-break">
+        <h2>7. Grafici di Previsione</h2>
+        <div class="chart-group">
+            <h3>Training: Fitted vs Observed</h3>
+            <div class="chart-container">
+                <div id="train-chart" class="chart-box"></div>
+            </div>
+        </div>
+        <div class="chart-group">
+            <h3>Test: Forecast vs Observed</h3>
+            <div class="chart-container">
+                <div id="test-chart" class="chart-box"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>8. Analisi Automatica</h2>
+        <div id="ai-analysis-paper"></div>
+    </div>
+    
+    <div class="section">
+        <h2>9. Conclusioni</h2>
+        <p style="color:var(--text-light);">
+            Questo report presenta l'analisi del modello ARIMA/SARIMA selezionato, 
+            con configurazioni, parametri, metriche e previsioni su training e test set.
+        </p>
+    </div>
+    
+    <div class="footer">
+        <strong>SYRIAS</strong> · Time Series Forecasting Platform<br>
+        <span id="footer-date"></span>
+    </div>
+    
+    <script>
+        const COLORS = {
+            primary: '#1a365d',
+            accent: '#2b6cb0',
+            success: '#38a169',
+            danger: '#e53e3e',
+            grid: '#e2e8f0',
+            bg: '#ffffff'
+        };
+        
+        // Static chart config for better print support
+        const chartConfig = {
+            responsive: true,
+            displayModeBar: false,
+            staticPlot: true  // Important for print
+        };
+        
+        function getBaseLayout(title, height) {
+            return {
+                margin: { t: 20, r: 20, b: 70, l: 55 },
+                paper_bgcolor: COLORS.bg,
+                plot_bgcolor: COLORS.bg,
+                font: { family: 'Inter', size: 11, color: '#1a202c' },
+                xaxis: { 
+                    gridcolor: COLORS.grid, 
+                    linecolor: COLORS.grid,
+                    tickfont: { size: 10 }
+                },
+                yaxis: { 
+                    gridcolor: COLORS.grid, 
+                    linecolor: COLORS.grid,
+                    tickfont: { size: 10 }
+                },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2, font: { size: 10 } },
+                height: height || 320,
+                autosize: true
+            };
+        }
+        
+        function createLineChart(id, dates, values, title, color, height) {
+            if (!dates?.length || !values?.length) return;
+            
+            const trace = {
+                x: dates,
+                y: values,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: color || COLORS.accent, width: 2 }
+            };
+            
+            Plotly.newPlot(id, [trace], { ...getBaseLayout(title, height || 320), showlegend: false }, chartConfig);
+        }
+        
+        function createBarChart(id, lags, values, title, color, height) {
+            if (!lags?.length || !values?.length) return;
+            
+            const trace = {
+                x: lags,
+                y: values,
+                type: 'bar',
+                marker: { color: color || COLORS.accent }
+            };
+            
+            const layout = {
+                ...getBaseLayout(title, height || 240),
+                showlegend: false,
+                xaxis: { ...getBaseLayout().xaxis, title: { text: 'Lag', font: { size: 10 } } },
+                yaxis: { ...getBaseLayout().yaxis, title: { text: title, font: { size: 10 } } }
+            };
+            
+            Plotly.newPlot(id, [trace], layout, chartConfig);
+        }
+        
+        function createDualLineChart(id, dates, actual, fitted, title, fittedLabel, fittedColor, height) {
+            if (!dates?.length) return;
+            
+            const traces = [
+                {
+                    x: dates, y: actual,
+                    type: 'scatter', mode: 'lines',
+                    name: 'Observed',
+                    line: { color: COLORS.accent, width: 2 }
+                },
+                {
+                    x: dates, y: fitted,
+                    type: 'scatter', mode: 'lines',
+                    name: fittedLabel,
+                    line: { color: fittedColor, width: 2, dash: 'dot' }
+                }
+            ];
+            
+            Plotly.newPlot(id, traces, getBaseLayout(title, height || 320), chartConfig);
+        }
+        
+        window.addEventListener('DOMContentLoaded', async function() {
+            const params = new URLSearchParams(window.location.search);
+            const runId = params.get('run_id');
+            const modelId = params.get('model_id');
+            
+            if (runId || modelId) {
+                try {
+                    const url = runId ? `/api/model-run/${runId}/paper-data` : `/api/model/${modelId}/paper-data`;
+                    const response = await fetch(url, { credentials: 'include' });
+                    if (!response.ok) throw new Error('Errore caricamento dati');
+                    populatePaper(await response.json());
+                } catch (e) {
+                    console.error(e);
+                    document.body.innerHTML = `<div class="section"><h2>Errore</h2><p>${e.message}</p></div>`;
+                }
+            }
+        });
+        
+        function populatePaper(data) {
+            // Date
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
+            document.getElementById('paper-date').textContent = `Generato il ${dateStr}`;
+            document.getElementById('footer-date').textContent = `Report generato il ${dateStr}`;
+            
+            // General Info
+            document.getElementById('general-info').innerHTML = `
+                <div class="info-item"><strong>File</strong><span>${data.file_name || 'N/A'}</span></div>
+                <div class="info-item"><strong>Modello</strong><span style="font-family:'JetBrains Mono',monospace">${data.order || 'N/A'}</span></div>
+                ${data.seasonal_order ? `<div class="info-item"><strong>Stagionale</strong><span style="font-family:'JetBrains Mono',monospace">${data.seasonal_order}</span></div>` : ''}
+                <div class="info-item"><strong>Creato</strong><span>${data.created_at ? new Date(data.created_at).toLocaleDateString('it-IT') : 'N/A'}</span></div>
+            `;
+            
+            // Config
+            const c = data.config_info || {};
+            const p = data.sarimax_params || {};
+            document.getElementById('model-config').innerHTML = `
+                <div class="info-item"><strong>Smoothing</strong><span>${c.smoothing_window > 1 ? `Win ${c.smoothing_window}` : 'No'}</span></div>
+                <div class="info-item"><strong>Log</strong><span>${c.log_transform ? 'Sì' : 'No'}</span></div>
+                <div class="info-item"><strong>Diff</strong><span>d=${c.differencing_order || 0}</span></div>
+                <div class="info-item"><strong>Trend</strong><span>${c.trend || p.trend || 'n'}</span></div>
+                <div class="info-item"><strong>Tot</strong><span>${c.total_obs || 'N/A'}</span></div>
+                <div class="info-item"><strong>Train</strong><span>${c.train_obs || 'N/A'}</span></div>
+                <div class="info-item"><strong>Test</strong><span>${c.test_obs || 'N/A'}</span></div>
+            `;
+            
+            // SARIMAX
+            document.getElementById('sarimax-params').innerHTML = `
+                <div class="info-grid">
+                    <div class="info-item"><strong>p (AR)</strong><span>${p.p || 0}</span></div>
+                    <div class="info-item"><strong>d</strong><span>${p.d || 0}</span></div>
+                    <div class="info-item"><strong>q (MA)</strong><span>${p.q || 0}</span></div>
+                    <div class="info-item"><strong>P</strong><span>${p.P || 0}</span></div>
+                    <div class="info-item"><strong>D</strong><span>${p.D || 0}</span></div>
+                    <div class="info-item"><strong>Q</strong><span>${p.Q || 0}</span></div>
+                    <div class="info-item"><strong>m</strong><span>${p.m || 0}</span></div>
+                    <div class="info-item"><strong>Trend</strong><span>${p.trend || 'n'}</span></div>
+                </div>
+            `;
+            
+            // Metrics
+            const m = data.metrics || {};
+            let mHtml = '';
+            if (m.training) {
+                mHtml += `<div class="metric-card"><div class="label">R² Train</div><div class="value">${m.training.r_squared?.toFixed(4) || 'N/A'}</div></div>`;
+                mHtml += `<div class="metric-card"><div class="label">MAPE Train</div><div class="value">${m.training.mape?.toFixed(2) || 'N/A'}%</div></div>`;
+            }
+            if (m.test) {
+                mHtml += `<div class="metric-card"><div class="label">R² Test</div><div class="value">${m.test.r_squared?.toFixed(4) || 'N/A'}</div></div>`;
+                mHtml += `<div class="metric-card"><div class="label">MAPE Test</div><div class="value">${m.test.mape?.toFixed(2) || 'N/A'}%</div></div>`;
+            }
+            document.getElementById('metrics-display').innerHTML = mHtml || '<p style="color:var(--text-light)">N/A</p>';
+            
+            // Coefficients
+            if (data.coefficients?.length) {
+                let html = '<table><thead><tr><th>Param</th><th>Coeff</th><th>Std Err</th><th>t</th><th>P-val</th></tr></thead><tbody>';
+                data.coefficients.forEach(x => {
+                    html += `<tr><td><strong>${x.parameter}</strong></td><td>${x.coefficient?.toFixed(4) || '-'}</td><td>${x.std_error?.toFixed(4) || '-'}</td><td>${x.t_value?.toFixed(3) || '-'}</td><td>${x.p_value?.toFixed(4) || '-'}</td></tr>`;
+                });
+                document.getElementById('coefficients-table').innerHTML = html + '</tbody></table>';
+            } else {
+                document.getElementById('coefficients-table').innerHTML = '<p style="color:var(--text-light)">N/A</p>';
+            }
+            
+            // Summary
+            document.getElementById('model-summary').textContent = data.model_summary || 'N/A';
+            
+            // Charts - Series
+            if (data.original_series) {
+                const os = data.original_series;
+                createLineChart('original-series-chart', os.dates, os.values, 'Serie Originale', COLORS.accent, 320);
+                
+                const s = os.stats || {};
+                document.getElementById('original-series-stats').innerHTML = `
+                    <div class="info-item"><strong>N</strong><span>${s.obs_count || s.count || '-'}</span></div>
+                    <div class="info-item"><strong>Media</strong><span>${s.mean?.toFixed(2) || '-'}</span></div>
+                    <div class="info-item"><strong>Std</strong><span>${s.std?.toFixed(2) || '-'}</span></div>
+                    <div class="info-item"><strong>Min</strong><span>${s.min?.toFixed(2) || '-'}</span></div>
+                    <div class="info-item"><strong>Max</strong><span>${s.max?.toFixed(2) || '-'}</span></div>
+                `;
+                
+                const acf = os.acf_pacf || {};
+                if (acf.lags?.length) {
+                    createBarChart('original-acf-chart', acf.lags, acf.acf, 'ACF', COLORS.accent, 240);
+                    createBarChart('original-pacf-chart', acf.lags, acf.pacf, 'PACF', COLORS.success, 240);
+                }
+            }
+            
+            // Transformed
+            if (data.transformed_series) {
+                document.getElementById('transformed-series-section').style.display = 'block';
+                const ts = data.transformed_series;
+                createLineChart('transformed-series-chart', ts.dates, ts.values, 'Serie Trasformata', COLORS.primary, 320);
+                
+                const s = ts.stats || {};
+                document.getElementById('transformed-series-stats').innerHTML = `
+                    <div class="info-item"><strong>N</strong><span>${s.obs_count || s.count || '-'}</span></div>
+                    <div class="info-item"><strong>Media</strong><span>${s.mean?.toFixed(2) || '-'}</span></div>
+                    <div class="info-item"><strong>Std</strong><span>${s.std?.toFixed(2) || '-'}</span></div>
+                    <div class="info-item"><strong>Min</strong><span>${s.min?.toFixed(2) || '-'}</span></div>
+                    <div class="info-item"><strong>Max</strong><span>${s.max?.toFixed(2) || '-'}</span></div>
+                `;
+                
+                const acf = ts.acf_pacf || {};
+                if (acf.lags?.length) {
+                    createBarChart('transformed-acf-chart', acf.lags, acf.acf, 'ACF', COLORS.accent, 240);
+                    createBarChart('transformed-pacf-chart', acf.lags, acf.pacf, 'PACF', COLORS.success, 240);
+                }
+            }
+            
+            // Forecast Charts
+            if (data.charts?.train?.length) {
+                const t = data.charts.train;
+                createDualLineChart('train-chart', t.map(x=>x.date), t.map(x=>x.actual), t.map(x=>x.forecasted), 'Training: Fitted vs Observed', 'Fitted', COLORS.success, 320);
+            }
+            if (data.charts?.test?.length) {
+                const t = data.charts.test;
+                createDualLineChart('test-chart', t.map(x=>x.date), t.map(x=>x.actual), t.map(x=>x.forecasted), 'Test: Forecast vs Observed', 'Forecast', COLORS.danger, 320);
+            }
+            
+            // AI Analysis
+            const aiDiv = document.getElementById('ai-analysis-paper');
+            const recs = data.ai_recommendations || (data.ai_recommendation ? [{ series_name: 'Serie', recommendation: data.ai_recommendation }] : []);
+            
+            if (recs.length) {
+                let html = '';
+                recs.forEach(item => {
+                    const r = item.recommendation;
+                    if (!r) return;
+                    const model = r.type === 'SARIMA' ? `SARIMA(${r.p},${r.d},${r.q})(${r.P},${r.D},${r.Q},${r.m})` : `ARIMA(${r.p},${r.d},${r.q})`;
+                    html += `<div class="ai-card"><h4>${item.series_name}</h4><div class="info-grid">
+                        <div class="info-item"><strong>Suggerito</strong><span style="font-family:'JetBrains Mono',monospace">${model}</span></div>
+                        <div class="info-item"><strong>Params</strong><span>p=${r.p}, d=${r.d}, q=${r.q}</span></div>
+                        ${r.type === 'SARIMA' ? `<div class="info-item"><strong>Seasonal</strong><span>P=${r.P}, D=${r.D}, Q=${r.Q}, m=${r.m}</span></div>` : ''}
+                    </div></div>`;
+                });
+                aiDiv.innerHTML = html;
+            } else {
+                aiDiv.innerHTML = '<p style="color:var(--text-light)">N/A</p>';
+            }
+        }
+    </script>
+</body>
+</html>

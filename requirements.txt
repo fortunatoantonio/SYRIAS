@@ -1,0 +1,38 @@
+# Backend Framework
+flask==3.0.0
+flask-cors==4.0.0
+flask-sqlalchemy==3.1.1
+flask-login==0.6.3
+
+# Database
+sqlalchemy==2.0.23
+
+# ARIMA & Time Series
+statsmodels==0.14.5
+pmdarima==2.0.4
+pandas==2.3.3
+numpy==2.3.4
+scipy==1.16.3
+
+# Data Visualization
+plotly==5.18.0
+matplotlib==3.10.8
+seaborn==0.13.0
+
+# Export
+reportlab==4.0.7
+openpyxl==3.1.2
+xlsxwriter==3.1.9
+
+# Machine Learning
+scikit-learn==1.7.2
+
+# Automation
+schedule==1.2.0
+
+# Utilities
+python-dotenv==1.0.0
+werkzeug==3.0.1
+jinja2==3.1.2
+requests==2.31.0
+
