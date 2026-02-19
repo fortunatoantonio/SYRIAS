@@ -189,9 +189,9 @@ function showLoginOnly() {
     // Nascondi l'header (importante per smartphone)
     const headerEl = document.querySelector('.header');
     if (headerEl) {
-        headerEl.style.display = 'none';
-        headerEl.style.visibility = 'hidden';
-        // Reset delle dimensioni dell'header
+        headerEl.style.setProperty('display', 'none', 'important');
+        headerEl.style.setProperty('visibility', 'hidden', 'important');
+        headerEl.style.setProperty('opacity', '0', 'important');
         headerEl.style.width = '';
         headerEl.style.maxWidth = '';
         headerEl.style.height = '';
@@ -235,8 +235,18 @@ function showLoginOnly() {
     if (userHeaderEl) {
         userHeaderEl.style.display = 'none';
     }
-    document.getElementById('login-form').style.display = 'block';
-    document.getElementById('register-form').style.display = 'none';
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+    if (loginForm) {
+        loginForm.style.display = 'block';
+        loginForm.style.opacity = '1';
+        loginForm.style.transform = '';
+    }
+    if (registerForm) {
+        registerForm.style.display = 'none';
+        registerForm.style.opacity = '1';
+        registerForm.style.transform = '';
+    }
     
     // Reset tutte le variabili globali
     currentFileId = null;
@@ -534,33 +544,37 @@ async function register() {
     }
 }
 async function logout() {
+    // Mostra subito la pagina di login e pulisci lo stato locale così la UI
+    // si aggiorna sempre al primo click (anche se il server restituisce errore/401)
+    isAuthenticated = false;
+    currentUser = null;
+    currentFileId = null;
+    currentModelId = null;
+    fileData = null;
+    splitApplied = false;
+    totalObservations = null;
+    clearAuthForms();
+    showLoginOnly();
+
     try {
         const response = await fetch('/api/logout', {
             method: 'POST',
             credentials: 'include'
         });
-        
+
         if (response.ok) {
-            isAuthenticated = false;
-            currentUser = null;
-            currentFileId = null;
-            currentModelId = null;
-            fileData = null;
-            splitApplied = false;
-            totalObservations = null;
-            
-            // Pulisci i campi del form per privacy
-            clearAuthForms();
-            
-            showLoginOnly();
             showToast('Sessione terminata correttamente', 'success');
         } else {
-            const error = await response.json();
-            showToast(`Errore logout: ${error.error}`, 'error');
+            try {
+                const error = await response.json();
+                showToast(`Errore logout: ${error.error || 'Sessione già terminata'}`, 'warning');
+            } catch (_) {
+                showToast('Sessione terminata', 'success');
+            }
         }
     } catch (error) {
         console.error('Errore logout:', error);
-        showToast(`Errore logout: ${error.message}`, 'error');
+        showToast('Sessione terminata', 'success');
     }
 }
 
