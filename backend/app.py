@@ -45,9 +45,11 @@ def create_app():
     # Inizializza Flask-Login
     login_manager.init_app(app)
     
-    # Crea cartelle necessarie
+    # Crea cartelle necessarie (così chi clona il repo non deve crearle a mano)
+    os.makedirs(Config.INSTANCE_DIR, exist_ok=True)      # database SQLite
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
     os.makedirs(Config.EXPORT_FOLDER, exist_ok=True)
+    os.makedirs(Config.AI_IMAGES_FOLDER, exist_ok=True)
     
     init_db(app)
     app.register_blueprint(api, url_prefix='/api')

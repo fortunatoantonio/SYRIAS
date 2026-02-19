@@ -10,6 +10,7 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
     
     # Database: usa sempre il percorso assoluto nella root del progetto
+    INSTANCE_DIR = os.path.join(BASE_DIR, 'instance')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', f'sqlite:///{os.path.join(BASE_DIR, "instance", "dash.db")}')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
